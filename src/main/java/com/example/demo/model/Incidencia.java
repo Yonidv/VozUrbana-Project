@@ -27,9 +27,7 @@ public class Incidencia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long incidencia_id;
     public String descripcion;
-    
     public String url_foto;
-    public int cantidad_usada;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,7 +37,7 @@ public class Incidencia {
     @JoinColumn(name = "municipalidad_id")
     private Municipalidad municipalidad;
 
-    @OneToMany(mappedBy = "municipalidad")
+    @OneToMany(mappedBy = "incidencia")
     private List<DetalleIncidenciaMaterial> detalleIncidenciaMaterial;
     
 }

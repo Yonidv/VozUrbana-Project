@@ -1,8 +1,11 @@
 package com.example.demo.service.municipalidad;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+
+import com.example.demo.dtos.MunicipalidadDto;
 
 import com.example.demo.model.Municipalidad;
 import com.example.demo.repository.MunicipalidadRepository;
@@ -13,27 +16,29 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MunicipalidadServiceImpl implements MunicipalidadService {
 
-    private MunicipalidadRepository municipalidadRepository;
+    private final MunicipalidadRepository municipalidadRepository;
 
     @Override
-    public Municipalidad findById(Long id) {
-        return municipalidadRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Municipalidad no encontrada con id: " + id));
-    }
-
-    @Override
-    public Municipalidad save(Municipalidad municipalidad) {
+    public Municipalidad save(MunicipalidadDto municipalidadDto) {
+        Municipalidad municipalidad = new Municipalidad();
+        municipalidad.setNombre_municipio(municipalidadDto.getNombre_municipio());
         return municipalidadRepository.save(municipalidad);
     }
+    
+    @Override
+    public MunicipalidadDto findById(Long id) {
+        Municipalidad municipalidad = municipalidadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Municipalidad no encontrada con id: " + id));
+        return new MunicipalidadDto(
+                municipalidad.getMunicipalidad_id(),
+                municipalidad.getNombre_municipio());
+    }
 
     @Override
-    public Municipalidad update(Long id, Municipalidad municipalidad) {
+    public Municipalidad update(Long id, MunicipalidadDto municipalidadDto) {
         return municipalidadRepository.findById(id)
                 .map(existingMunicipalidad -> {
-                    existingMunicipalidad.setNombre_municipio(municipalidad.getNombre_municipio());
-                    existingMunicipalidad.setIncidencias(municipalidad.getIncidencias());
-                    existingMunicipalidad.setMateriales(municipalidad.getMateriales());
-                    existingMunicipalidad.setUsuarios(municipalidad.getUsuarios());
+                    existingMunicipalidad.setNombre_municipio(municipalidadDto.getNombre_municipio());
                     return municipalidadRepository.save(existingMunicipalidad);
                 })
                 .orElseThrow(() -> new RuntimeException("Municipalidad no encontrada con id: " + id));
@@ -45,8 +50,11 @@ public class MunicipalidadServiceImpl implements MunicipalidadService {
     }
 
     @Override
-    public List<Municipalidad> findAll() {
-        return municipalidadRepository.findAll();
+    public List<MunicipalidadDto> findAll() {
+        return municipalidadRepository.findAll().stream()
+                .map(municipalidad -> new MunicipalidadDto(
+                        municipalidad.getMunicipalidad_id(),
+                        municipalidad.getNombre_municipio()))
+                .collect(Collectors.toList());
     }
-    
 }

@@ -27,6 +27,6 @@ public class Material {
     @JoinColumn(name = "municipalidad_id")
     private Municipalidad municipalidad;
 
-    @OneToMany(mappedBy = "municipalidad")
+    @OneToMany(mappedBy = "material")
     private List<DetalleIncidenciaMaterial> detalleIncidenciaMaterial;
 }

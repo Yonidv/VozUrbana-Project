@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.enums.RolUsuario;
 import com.example.demo.model.Usuario;
 import com.example.demo.repository.UsuarioRepository;
 
@@ -23,7 +24,9 @@ public class UsuarioLoginService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con nombre: " + username));
 
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + usuario.getRol());
+        RolUsuario rol = usuario.getRol();
+        String authorityName = rol != null ? "ROLE_" + rol.name() : "ROLE_CLIENT";
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(authorityName);
 
         return new User(
                 usuario.getUsername(),

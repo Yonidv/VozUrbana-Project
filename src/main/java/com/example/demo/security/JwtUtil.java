@@ -20,9 +20,18 @@ public class JwtUtil {
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
     public String generarToken(UserDetails userDetails) {
+    String role = userDetails.getAuthorities().stream()
+        .findFirst()
+        .map(authority -> authority.getAuthority())
+        .orElse("ROLE_USER");
+
+    return generarToken(userDetails.getUsername(), role);
+    }
+
+    public String generarToken(String username, String role) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .claim("role", userDetails.getAuthorities().stream().findFirst().get().getAuthority())
+        .setSubject(username)
+        .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) 
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -36,6 +45,15 @@ public class JwtUtil {
             throw new RuntimeException("Token inválido", e);
         }
       
+    }
+
+    public String extraerRol(String token) {
+        try {
+            Object role = getClaims(token).get("role");
+            return role != null ? role.toString() : null;
+        } catch (Exception e) {
+            throw new RuntimeException("Token inválido", e);
+        }
     }
 
     public boolean validarToken(String token, UserDetails userDetails) {

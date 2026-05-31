@@ -3,12 +3,14 @@ package com.example.demo.security;
 import com.example.demo.service.auth.UsuarioLoginService;
 
 import io.jsonwebtoken.MalformedJwtException;
+import java.util.List;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -56,11 +58,16 @@ public class JwtFilter extends OncePerRequestFilter {
     var userDetails = usuarioLoginService.loadUserByUsername(username);
 
     if (jwtUtil.validarToken(jwt, userDetails)) {
+        String role = jwtUtil.extraerRol(jwt);
+        var authorities = role != null && !role.isBlank()
+                ? List.of(new SimpleGrantedAuthority(role))
+                : userDetails.getAuthorities();
+
         System.out.println("✅ Token válido para el usuario: " + username);
-        System.out.println("✅ Autoridades del usuario: " + userDetails.getAuthorities());
+        System.out.println("✅ Rol del token: " + role);
 
         UsernamePasswordAuthenticationToken authToken =
-            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
