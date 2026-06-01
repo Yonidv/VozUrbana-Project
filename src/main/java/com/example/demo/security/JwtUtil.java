@@ -6,6 +6,8 @@ import java.util.Date;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.example.demo.service.auth.UsuarioPrincipal;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -25,13 +27,23 @@ public class JwtUtil {
         .map(authority -> authority.getAuthority())
         .orElse("ROLE_USER");
 
-    return generarToken(userDetails.getUsername(), role);
+    Long municipalidadId = null;
+    if (userDetails instanceof UsuarioPrincipal usuarioPrincipal) {
+        municipalidadId = usuarioPrincipal.getMunicipalidadId();
+    }
+
+    return generarToken(userDetails.getUsername(), role, municipalidadId);
     }
 
     public String generarToken(String username, String role) {
+        return generarToken(username, role, null);
+    }
+
+    public String generarToken(String username, String role, Long municipalidadId) {
         return Jwts.builder()
         .setSubject(username)
         .claim("role", role)
+        .claim("municipalidadId", municipalidadId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) 
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -51,6 +63,21 @@ public class JwtUtil {
         try {
             Object role = getClaims(token).get("role");
             return role != null ? role.toString() : null;
+        } catch (Exception e) {
+            throw new RuntimeException("Token inválido", e);
+        }
+    }
+
+    public Long extraerMunicipalidadId(String token) {
+        try {
+            Object municipalidadId = getClaims(token).get("municipalidadId");
+            if (municipalidadId instanceof Number number) {
+                return number.longValue();
+            }
+            if (municipalidadId != null) {
+                return Long.valueOf(municipalidadId.toString());
+            }
+            return null;
         } catch (Exception e) {
             throw new RuntimeException("Token inválido", e);
         }

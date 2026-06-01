@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dtos.MaterialDto;
+import com.example.demo.service.auth.UsuarioPrincipal;
 import com.example.demo.service.material.MaterialService;
 
 import jakarta.validation.Valid;
@@ -26,9 +28,9 @@ public class MaterialController {
     private final MaterialService materialService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createMaterial(@Valid @RequestBody MaterialDto material) {
+    public ResponseEntity<?> createMaterial(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @Valid @RequestBody MaterialDto material) {
         HashMap<String, Object> response = new HashMap<>();
-        var newMaterial = materialService.createMaterial(material);
+        var newMaterial = materialService.createMaterial(material, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
         if (newMaterial == null) {
             response.put("mensaje", "Error al crear el material");
         } else {
@@ -38,9 +40,9 @@ public class MaterialController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateMaterial(@PathVariable Long id, @Valid @RequestBody MaterialDto materialDto) {
+    public ResponseEntity<?> updateMaterial(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id, @Valid @RequestBody MaterialDto materialDto) {
         HashMap<String, Object> response = new HashMap<>();
-        var materialUpdate = materialService.updateMaterial(id, materialDto);
+        var materialUpdate = materialService.updateMaterial(id, materialDto, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
         if (materialUpdate == null) {
             response.put("mensaje", "Error al actualizar el material");
         } else {
@@ -50,10 +52,10 @@ public class MaterialController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteMaterial(@PathVariable Long id) {
+    public ResponseEntity<?> deleteMaterial(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id) {
         HashMap<String, Object> response = new HashMap<>();
         try {
-            materialService.deleteMaterial(id);
+            materialService.deleteMaterial(id, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
             response.put("mensaje", "Material eliminado exitosamente");
         } catch (Exception e) {
             response.put("mensaje", "Error al eliminar el material: " + e.getMessage());
@@ -62,13 +64,13 @@ public class MaterialController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<MaterialDto>> seeAllMaterials() {
-        return ResponseEntity.ok(materialService.getAllMaterials());
+    public ResponseEntity<List<MaterialDto>> seeAllMaterials(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal) {
+        return ResponseEntity.ok(materialService.getAllMaterials(usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null));
     }
 
     @GetMapping("/search/{id}")
-    public ResponseEntity<MaterialDto> searchMaterialById(@PathVariable Long id) {
-        MaterialDto material = materialService.getMaterialById(id);
+    public ResponseEntity<MaterialDto> searchMaterialById(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id) {
+        MaterialDto material = materialService.getMaterialById(id, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
         return ResponseEntity.ok(material);
     }
 }

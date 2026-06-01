@@ -6,10 +6,10 @@ import com.example.demo.dtos.UsuariosDto;
 import com.example.demo.model.Usuario;
 
 public interface UsuarioService {
-    Usuario createUser(UsuariosDto usuarioDto);
-    UsuariosDto getUserById(Long id);
-    Usuario updateUser(Long id, UsuariosDto usuarioDto);
-    void deleteUser(Long id);
-    List<UsuariosDto> getAllUsers();
+    Usuario createUser(UsuariosDto usuarioDto, Long municipalidadId);
+    UsuariosDto getUserById(Long id, Long municipalidadId);
+    Usuario updateUser(Long id, UsuariosDto usuarioDto, Long municipalidadId);
+    void deleteUser(Long id, Long municipalidadId);
+    List<UsuariosDto> getAllUsers(Long municipalidadId);
 
 }

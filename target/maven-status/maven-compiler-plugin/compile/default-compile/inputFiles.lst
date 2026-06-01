@@ -27,6 +27,7 @@ C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Proje
 C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\security\JwtUtil.java
 C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\security\SecurityConfig.java
 C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\service\auth\UsuarioLoginService.java
+C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\service\auth\UsuarioPrincipal.java
 C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\service\image\ImageService.java
 C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\service\incidencia\IncidenciaService.java
 C:\Users\maki_\OneDrive\Documentos\Proyectos con Java Springboot\VozUrbana-Project\src\main\java\com\example\demo\service\incidencia\IncidenciaServiceImpl.java

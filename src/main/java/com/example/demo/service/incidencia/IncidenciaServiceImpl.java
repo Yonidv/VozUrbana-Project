@@ -6,19 +6,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dtos.DetalleIncidenciaMaterialDto;
 import com.example.demo.dtos.IncidenciaDto;
 import com.example.demo.enums.EstadoIncidencia;
+import com.example.demo.model.Municipalidad;
 import com.example.demo.model.Incidencia;
 import com.example.demo.model.DetalleIncidenciaMaterial;
 import com.example.demo.model.Material;
 import com.example.demo.repository.IncidenciaRepository;
 import com.example.demo.repository.DetalleIncidenciaMaterialRepository;
 import com.example.demo.repository.MaterialRepository;
+import com.example.demo.repository.MunicipalidadRepository;
 import com.example.demo.service.image.ImageService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,7 @@ public class IncidenciaServiceImpl implements IncidenciaService {
     private final IncidenciaRepository incidenciaRepository;
     private final DetalleIncidenciaMaterialRepository detalleIncidenciaMaterialRepository;
     private final MaterialRepository materialRepository;
+    private final MunicipalidadRepository municipalidadRepository;
     private final ImageService imageService;
 
     @Value("${app.file.base.url}")
@@ -38,21 +43,24 @@ public class IncidenciaServiceImpl implements IncidenciaService {
 
     @Override
     @Transactional
-    public Incidencia createIncidencia(IncidenciaDto incidenciaDto,MultipartFile imageFile) throws IOException{
+    public Incidencia createIncidencia(IncidenciaDto incidenciaDto, MultipartFile imageFile, Long municipalidadId) throws IOException{
+        validarMunicipalidadId(municipalidadId);
         String imageUrl = imageService.storeImage(imageFile);
         Incidencia incidencia = new Incidencia();
         incidencia.setDescripcion(incidenciaDto.getDescripcion());
         incidencia.setUrl_foto(imageUrl);
         incidencia.setEstado(EstadoIncidencia.PENDIENTE);
+        incidencia.setMunicipalidad(obtenerMunicipalidad(municipalidadId));
         Incidencia savedIncidencia = incidenciaRepository.save(incidencia);
         procesarDetalles(savedIncidencia, incidenciaDto.getDetalles());
         return savedIncidencia;
     }
 
     @Override
-    public IncidenciaDto getIncidenciaById(Long id) {
+    public IncidenciaDto getIncidenciaById(Long id, Long municipalidadId) {
         Incidencia incidencia = incidenciaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Incidencia no encontrada con id: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Incidencia no encontrada con id: " + id));
+        validarMunicipalidad(incidencia, municipalidadId);
 
         List<DetalleIncidenciaMaterialDto> detalles = detalleIncidenciaMaterialRepository.findByIncidencia(incidencia).stream()
             .map(this::toDto)
@@ -74,9 +82,11 @@ public class IncidenciaServiceImpl implements IncidenciaService {
 
     @Override
     @Transactional
-    public IncidenciaDto updateIncidencia(Long id, IncidenciaDto incidenciaDto) {
+    public IncidenciaDto updateIncidencia(Long id, IncidenciaDto incidenciaDto, Long municipalidadId) {
         return incidenciaRepository.findById(id)
                 .map(existingIncidencia -> {
+                    validarMunicipalidad(existingIncidencia, municipalidadId);
+
                     if (incidenciaDto.getDescripcion() != null && !incidenciaDto.getDescripcion().isBlank()) {
                         existingIncidencia.setDescripcion(incidenciaDto.getDescripcion());
                     }
@@ -91,20 +101,24 @@ public class IncidenciaServiceImpl implements IncidenciaService {
                     procesarDetalles(existingIncidencia, incidenciaDto.getDetalles());
 
                     incidenciaRepository.save(existingIncidencia);
-                    return getIncidenciaById(id);
+                    return getIncidenciaById(id, municipalidadId);
                 })
-                .orElseThrow(() -> new RuntimeException("Incidencia no encontrada con id: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Incidencia no encontrada con id: " + id));
     }
 
     @Override
-    public void deleteIncidencia(Long id) {
+    public void deleteIncidencia(Long id, Long municipalidadId) {
+        Incidencia incidencia = incidenciaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Incidencia no encontrada con id: " + id));
+        validarMunicipalidad(incidencia, municipalidadId);
         incidenciaRepository.deleteById(id);
     }
 
     @Override
-    public List<IncidenciaDto> getAllIncidencias() {
-        return incidenciaRepository.findAll().stream()
-                .map(incidencia -> getIncidenciaById(incidencia.getIncidencia_id()))
+    public List<IncidenciaDto> getAllIncidencias(Long municipalidadId) {
+        validarMunicipalidadId(municipalidadId);
+        return incidenciaRepository.findAllByMunicipalidadId(municipalidadId).stream()
+                .map(incidencia -> getIncidenciaById(incidencia.getIncidencia_id(), municipalidadId))
                 .collect(Collectors.toList());
     }
 
@@ -196,6 +210,24 @@ public class IncidenciaServiceImpl implements IncidenciaService {
                 detalle.getMaterial() != null ? detalle.getMaterial().getMaterial_id() : null,
                 detalle.getCantidad_usada()
         );
+    }
+
+    private void validarMunicipalidadId(Long municipalidadId) {
+        if (municipalidadId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "La municipalidad del usuario es obligatoria");
+        }
+    }
+
+    private Municipalidad obtenerMunicipalidad(Long municipalidadId) {
+        return municipalidadRepository.findById(municipalidadId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Municipalidad no encontrada con id: " + municipalidadId));
+    }
+
+    private void validarMunicipalidad(Incidencia incidencia, Long municipalidadId) {
+        Long incidenciaMunicipalidadId = incidencia.getMunicipalidad() != null ? incidencia.getMunicipalidad().getMunicipalidad_id() : null;
+        if (municipalidadId == null || incidenciaMunicipalidadId == null || !incidenciaMunicipalidadId.equals(municipalidadId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes acceso a esta incidencia");
+        }
     }
     
 }

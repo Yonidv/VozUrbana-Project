@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dtos.IncidenciaDto;
 import com.example.demo.model.Incidencia;
+import com.example.demo.service.auth.UsuarioPrincipal;
 import com.example.demo.service.incidencia.IncidenciaService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,14 +40,14 @@ public class IncidenciaController {
  
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createIncidencia(
+    public ResponseEntity<?> createIncidencia(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal,
             @RequestPart("incidencia") String incidenciaJson,
             @RequestPart("image") MultipartFile imageFile) {
 
         HashMap<String, Object> response = new HashMap<>();
         try {
             IncidenciaDto incidenciaDto = objectMapper.readValue(incidenciaJson, IncidenciaDto.class);
-            Incidencia newIncidencia = incidenciaService.createIncidencia(incidenciaDto, imageFile);
+            Incidencia newIncidencia = incidenciaService.createIncidencia(incidenciaDto, imageFile, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
             response.put("mensaje", "Incidencia creado exitosamente");
             response.put("incidencia_id", newIncidencia.getIncidencia_id());
             response.put("foto", newIncidencia.getUrl_foto());
@@ -59,9 +61,9 @@ public class IncidenciaController {
         }
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateIncidencia(@PathVariable Long id, @RequestBody IncidenciaDto incidencia) {
+    public ResponseEntity<?> updateIncidencia(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id, @RequestBody IncidenciaDto incidencia) {
         HashMap<String, Object> response = new HashMap<>();
-        var incidenciaUpdate = incidenciaService.updateIncidencia(id, incidencia);
+        var incidenciaUpdate = incidenciaService.updateIncidencia(id, incidencia, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
         if (incidenciaUpdate == null) {
             response.put("mensaje", "Error al actualizar el incidencia");
         } else {
@@ -71,10 +73,10 @@ public class IncidenciaController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteIncidencia(@PathVariable Long id) {
+    public ResponseEntity<?> deleteIncidencia(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id) {
         HashMap<String, Object> response = new HashMap<>();
         try {
-            incidenciaService.deleteIncidencia(id);
+            incidenciaService.deleteIncidencia(id, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
             response.put("mensaje", "Incidencia eliminado exitosamente");
         } catch (Exception e) {
             response.put("mensaje", "Error al eliminar el incidencia: " + e.getMessage());
@@ -83,12 +85,12 @@ public class IncidenciaController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<IncidenciaDto>> seeAllIncidencias() {
-        return ResponseEntity.ok(incidenciaService.getAllIncidencias());
+    public ResponseEntity<List<IncidenciaDto>> seeAllIncidencias(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal) {
+        return ResponseEntity.ok(incidenciaService.getAllIncidencias(usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null));
     }
 
     @GetMapping("/search/{id}")
-    public ResponseEntity<IncidenciaDto> searchIncidenciaById(@PathVariable Long id) {
-        return ResponseEntity.ok(incidenciaService.getIncidenciaById(id));
+    public ResponseEntity<IncidenciaDto> searchIncidenciaById(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id) {
+        return ResponseEntity.ok(incidenciaService.getIncidenciaById(id, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null));
     }
 }

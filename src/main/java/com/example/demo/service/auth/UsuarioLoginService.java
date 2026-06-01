@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,10 +27,11 @@ public class UsuarioLoginService implements UserDetailsService {
         String authorityName = rol != null ? "ROLE_" + rol.name() : "ROLE_CLIENT";
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(authorityName);
 
-        return new User(
+        return new UsuarioPrincipal(
                 usuario.getUsername(),
                 usuario.getPassword(),
-                List.of(authority)
+            List.of(authority),
+            usuario.getMunicipalidad() != null ? usuario.getMunicipalidad().getMunicipalidad_id() : null
         );
     }
 }

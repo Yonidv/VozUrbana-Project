@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dtos.UsuariosDto;
 import com.example.demo.model.Usuario;
+import com.example.demo.service.auth.UsuarioPrincipal;
 import com.example.demo.service.usuario.UsuarioService;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,9 +29,9 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     
     @PostMapping("/create")
-    public ResponseEntity<?> createUser(@RequestBody UsuariosDto usuarioDto) {
+    public ResponseEntity<?> createUser(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @RequestBody UsuariosDto usuarioDto) {
         HashMap<String, Object> response = new HashMap<>();
-        Usuario newUser = usuarioService.createUser(usuarioDto);
+        Usuario newUser = usuarioService.createUser(usuarioDto, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
         if (newUser == null) {
             response.put("mensaje", "Error al crear el usuario");
         } else {
@@ -38,9 +40,9 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UsuariosDto usuarioDto) {
+    public ResponseEntity<?> updateUser(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id, @RequestBody UsuariosDto usuarioDto) {
         HashMap<String, Object> response = new HashMap<>();
-        Usuario userUpdate = usuarioService.updateUser(id, usuarioDto);
+        Usuario userUpdate = usuarioService.updateUser(id, usuarioDto, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
         if (userUpdate == null) {
             response.put("mensaje", "Error al actualizar el usuario");
         } else {
@@ -50,10 +52,10 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteUsuario(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUsuario(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id) {
         HashMap<String, Object> response = new HashMap<>();
         try {
-            usuarioService.deleteUser(id);
+            usuarioService.deleteUser(id, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null);
             response.put("mensaje", "Usuario eliminado exitosamente");
         } catch (Exception e) {
             response.put("mensaje", "Error al eliminar el usuario: " + e.getMessage());
@@ -62,12 +64,12 @@ public class UsuarioController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UsuariosDto>> seeAllUsers() {
-        return ResponseEntity.ok(usuarioService.getAllUsers());
+    public ResponseEntity<List<UsuariosDto>> seeAllUsers(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal) {
+        return ResponseEntity.ok(usuarioService.getAllUsers(usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null));
     }
 
     @GetMapping("/search/{id}")
-    public ResponseEntity<UsuariosDto> searchUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(usuarioService.getUserById(id));
+    public ResponseEntity<UsuariosDto> searchUserById(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.getUserById(id, usuarioPrincipal != null ? usuarioPrincipal.getMunicipalidadId() : null));
     }
 }

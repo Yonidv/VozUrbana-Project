@@ -2,6 +2,7 @@ package com.example.demo.model;
 import java.util.List;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,6 +21,10 @@ public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long material_id;
+
+    @Column(name = "codigo_material", nullable = false, unique = true, length = 20)
+    private String codigo_material;
+
     public String nombre_item;
     public int stock;
 

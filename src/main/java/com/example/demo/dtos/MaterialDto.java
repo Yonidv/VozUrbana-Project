@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MaterialDto {
     private Long material_id;
+    private String codigo_material;
     private String nombre_material;
     private Integer stock;
     private Long municipalidad_id;
