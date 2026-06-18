@@ -14,6 +14,6 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
 	@Query("select m from Material m where m.municipalidad.municipalidad_id = :municipalidadId")
 	List<Material> findAllByMunicipalidadId(@Param("municipalidadId") Long municipalidadId);
 
-	@Query(value = "SELECT * FROM material ORDER BY CAST(SUBSTRING(codigo_material, 5, 20) AS INT) DESC LIMIT 1", nativeQuery = true)
+	@Query(value = "SELECT codigo_material FROM material ORDER BY CAST(SUBSTRING(codigo_material, 5, 20) AS INT) DESC LIMIT 1", nativeQuery = true)
 	Optional<String> findTopCodigoMaterial();
 }
